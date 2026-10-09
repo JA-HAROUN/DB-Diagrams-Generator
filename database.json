@@ -1,0 +1,100 @@
+{
+  "name": "University",
+  "entities": [
+    {
+      "name": "Student",
+      "attributes": [
+        {
+          "name": "id",
+          "isPrimaryKey": true,
+          "composite": null,
+          "isMultiValued": false,
+          "derived": false
+        },
+        {
+          "name": "name",
+          "isPrimaryKey": false,
+          "composite": null,
+          "isMultiValued": false,
+          "derived": false
+        },
+        {
+          "name": "email",
+          "isPrimaryKey": false,
+          "composite": null,
+          "isMultiValued": false,
+          "derived": false
+        }
+      ],
+      "weak": false
+    },
+    {
+      "name": "Course",
+      "attributes": [
+        {
+          "name": "code",
+          "isPrimaryKey": true,
+          "composite": null,
+          "isMultiValued": false,
+          "derived": false
+        },
+        {
+          "name": "title",
+          "isPrimaryKey": false,
+          "composite": null,
+          "isMultiValued": false,
+          "derived": false
+        },
+        {
+          "name": "credit_hours",
+          "isPrimaryKey": false,
+          "composite": null,
+          "isMultiValued": false,
+          "derived": false
+        }
+      ],
+      "weak": false
+    },
+    {
+      "name": "Enrollment",
+      "attributes": [
+        {
+          "name": "grade",
+          "isPrimaryKey": false,
+          "composite": null,
+          "isMultiValued": false,
+          "derived": false
+        }
+      ],
+      "weak": true
+    }
+  ],
+  "relationships": [
+    {
+      "name": "Student_Enrollment",
+      "entities": [],
+      "cardinalities": [
+        "1",
+        "N"
+      ],
+      "participations": [
+        "Partial",
+        "Total"
+      ],
+      "identifying": true
+    },
+    {
+      "name": "Course_Enrollment",
+      "entities": [],
+      "cardinalities": [
+        "1",
+        "N"
+      ],
+      "participations": [
+        "Partial",
+        "Total"
+      ],
+      "identifying": true
+    }
+  ]
+}
