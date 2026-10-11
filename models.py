@@ -6,22 +6,21 @@ from pydantic import BaseModel, model_validator
 class Attribute(BaseModel):
     name: str = None
     isPrimaryKey: bool = False
-    composite: list[str] | None = None
+    composite: list[str | Attribute] | None = None
     isMultiValued: bool = False
     derived: bool = False
-
 
 class Entity(BaseModel):
     name: str = None
     attributes: list[Attribute] = []
     weak: bool = None
 
-
 class Relationship(BaseModel):
     name: str = None
     entities: list[str] = []
     cardinalities: list[str] = []
     participations: list[str] = []
+    attributes: list[str|Attribute] = []
     identifying: bool = False
 
     @model_validator(mode="before")
@@ -58,7 +57,6 @@ class Relationship(BaseModel):
             participations = data["participation"].split(":")
             data["participations"] = participations
         return data
-
 
 class Database(BaseModel):
     name: str | None = None
