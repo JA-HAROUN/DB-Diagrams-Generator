@@ -1,0 +1,87 @@
+{
+  "name": "Hotel Chain Database",
+  "entities": [
+    {
+      "name": "Hotel",
+      "attributes": [
+        {
+          "name": "hotel_id",
+          "isPrimaryKey": true,
+          "isPartialKey": false,
+          "composite": null,
+          "isMultiValued": false,
+          "derived": false
+        },
+        {
+          "name": "name",
+          "isPrimaryKey": false,
+          "isPartialKey": false,
+          "composite": null,
+          "isMultiValued": false,
+          "derived": false
+        },
+        {
+          "name": "address",
+          "isPrimaryKey": false,
+          "isPartialKey": false,
+          "composite": [
+            "street",
+            "city"
+          ],
+          "isMultiValued": false,
+          "derived": false
+        }
+      ],
+      "weak": false
+    },
+    {
+      "name": "Room",
+      "attributes": [
+        {
+          "name": "room_number",
+          "isPrimaryKey": false,
+          "isPartialKey": true,
+          "composite": null,
+          "isMultiValued": false,
+          "derived": false
+        },
+        {
+          "name": "floor",
+          "isPrimaryKey": false,
+          "isPartialKey": false,
+          "composite": null,
+          "isMultiValued": false,
+          "derived": false
+        },
+        {
+          "name": "price_per_night",
+          "isPrimaryKey": false,
+          "isPartialKey": false,
+          "composite": null,
+          "isMultiValued": false,
+          "derived": false
+        }
+      ],
+      "weak": true
+    }
+  ],
+  "relationships": [
+    {
+      "name": "Has_Room",
+      "entities": [
+        "Hotel",
+        "Room"
+      ],
+      "cardinalities": [
+        "1",
+        "N"
+      ],
+      "participations": [
+        "partial",
+        "total"
+      ],
+      "attributes": [],
+      "identifying": true
+    }
+  ]
+}

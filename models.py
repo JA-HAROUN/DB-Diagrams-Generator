@@ -1,62 +1,52 @@
+from __future__ import annotations
+
 from typing import Any
 
 from pydantic import BaseModel, model_validator
 
 
 class Attribute(BaseModel):
-    name: str = None
-    isPrimaryKey: bool = False
-    composite: list[str | Attribute] | None = None
-    isMultiValued: bool = False
-    derived: bool = False
+    name: str = ""
+    isPrimaryKey: bool | None = None
+    isPartialKey: bool | None = None
+    composite: list[str] | list[Attribute] | None = None
+    isMultiValued: bool | None = None
+    derived: bool | None = None
+
 
 class Entity(BaseModel):
-    name: str = None
+    name: str = ""
     attributes: list[Attribute] = []
-    weak: bool = None
+    weak: bool | None = None
+
 
 class Relationship(BaseModel):
-    name: str = None
+    name: str = ""
     entities: list[str] = []
     cardinalities: list[str] = []
     participations: list[str] = []
-    attributes: list[str|Attribute] = []
+    attributes: list[Attribute] = []
     identifying: bool = False
 
     @model_validator(mode="before")
     @classmethod
-    def get_entities(cls, data: Any) -> Any:
-
+    def reshape_input(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
         data = data.copy()
-        entities = []
 
-        if isinstance(data, dict):
-            for key, value in list(data.items()):
-                if key.startswith("entity"):
-                    entities.append(value)
-                    del data[key]
-
+        entities = [data.pop(k) for k in list(data) if k.startswith("entity")]
+        if entities:
             data["entities"] = entities
 
-        return data
+        if isinstance(data.get("cardinality"), str):
+            data["cardinalities"] = data.pop("cardinality").split(":")
 
-    @model_validator(mode="before")
-    @classmethod
-    def get_cardinality(cls, data: Any) -> Any:
-        if isinstance(data, dict) and "cardinality" in data:
-            cardinalities = data["cardinality"].split(":")
-            data["cardinalities"] = cardinalities
+        if isinstance(data.get("participation"), str):
+            data["participations"] = data.pop("participation").split(":")
 
         return data
 
-    # Participations
-    @model_validator(mode="before")
-    @classmethod
-    def get_participations(cls, data: Any) -> Any:
-        if isinstance(data, dict) and "participation" in data:
-            participations = data["participation"].split(":")
-            data["participations"] = participations
-        return data
 
 class Database(BaseModel):
     name: str | None = None

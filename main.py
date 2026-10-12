@@ -1,40 +1,77 @@
+from pydantic import ValidationError
+
+from ai import generate_database, refine_database
+from file_picker import pick_file
+from graph import db_drawing
+from helper_func import ai_call, load, open_file, save
 from models import Database
 
 # 1. Read JSON
-print("Hello to our ER Diagram Generator")
-print("Please give us your JSON file path: ")
-path = input()
+print("Hi There, Welcome to our ER Diagram Generator")
+print("Generate from Description or from a file? (1 = Description, 2 = JSON file)")
+choice = input().strip()
 
-with open(path, "r") as file:
-    data = file.read()
+while choice not in ("1", "2"):
+    print("Invalid choice. Please enter 1 or 2.")
+    choice = input().strip()
 
-    DB = Database.model_validate_json(data)
+database = None
+json_path = "database.json"
 
-print(DB)
+if choice == "1":
+    description = input("Describe your database:\n")
+    database = ai_call(generate_database, description)
 
-# 2. Get Models
+    if database:
+        save(database, "generated_database.json")
 
-# 3. Draw Model
+else:
+    path = pick_file()
+    if not path:
+        print("No file selected.")
+    else:
+        with open(path, "r", encoding="utf-8") as file:
+            content = file.read()
 
-"""
-TODO:
-    1. Logic to get the json file from the user -> File Picker
-    2. Use the json data to send it to db_drawing()
-    3. Display the generated ER diagram
-    4. Allow the user to save the generated diagram => Already saved in the file
+            try:
+                database = Database.model_validate_json(content)
+            except ValidationError as e:
+                print(f"Error validating JSON: {e}")
+                database = None
 
-    ### Relationship Must Have ability to add ATTRIBUTES
-    
-    5. ADD AI LOGIC
+while database is not None:
+    print("\n" + database.model_dump_json(indent=2))
+    print(f"""
+            What now?
+            1. Looks good, draw the diagram
+            2. I edited the file myself ({json_path}), reload it
+            3. Tell the AI what to change
+            4. Rewrite the description from scratch
+            (3 and 4 overwrite {json_path}, so save your manual edits first.)""")
+    action = input("> ").strip()
 
-FUTURE_RELEASES:
-    1. n-ary relations -> Done
-    2. Participation types -> Done
-    3. Composite Attribute of Composite Attribute (hierarchical)
-    4. Weak & Strong Entities -> Done
-    5. GUI For the App
-    6. Relational Diagram OUTPUT
-    7. Export to other formats (PDF, SVG, etc.)
-    8. Export SQL output if needed
-    9. Make the API Key inputable not just hardcoded
-"""
+    if action == "1":
+        db_drawing(database)
+        break
+    elif action == "2":
+        open_file(json_path)
+        input(f"Edit and save {json_path}, then press Enter...")
+        reloaded = load(json_path)
+        if reloaded:
+            database = reloaded
+        else:
+            print("Keeping the previous version. Fix the file and choose 2 again.")
+    elif action == "3":
+        change = input("What should change?\n")
+        updated = ai_call(refine_database, database, change)
+        if updated:
+            database = updated
+            save(database, json_path)
+    elif action == "4":
+        description = input("New description:\n")
+        updated = ai_call(generate_database, description)
+        if updated:
+            database = updated
+            save(database, json_path)
+    else:
+        print("Please enter 1, 2, 3 or 4.")

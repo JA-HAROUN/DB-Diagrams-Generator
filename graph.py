@@ -2,75 +2,109 @@ import html
 
 from graphviz import Graph
 
-from models import Database
+from models import Attribute
 
 
 # Drawing Functions
-def make_label(text, underlined = False):
+def make_label(text, underlined=False, dashed_underline=False):
     safe = html.escape(text)
-    return f"<<U>{safe}</U>>" if underlined else text
+    if dashed_underline:
+        return (
+            '<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="0">'
+            f'<TR><TD SIDES="B" STYLE="dashed">{safe}</TD></TR></TABLE>>'
+        )
+    if underlined:
+        return f"<<U>{safe}</U>>"
+    return f"<{safe}>"
 
-def composite_attribute_drawing(attribute, graph, entity):
-    parent_id = f"{entity.name}_{attribute.name}"
-    for subatt in attribute.composite:
-        sub_id = f"{parent_id}_{subatt}"
-        graph.node(name=f"{entity.name}_{attribute.name}_{subatt}", label=make_label(subatt, underlined=attribute.isPrimaryKey), shape="oval")
-        graph.edge(parent_id, sub_id)
 
-def attribute_drawing(attribute, graph, entity):
-    attribute_id = f"{entity.name}_{attribute.name}"
+def attribute_drawing(attribute, graph, component_name):
+    attribute_id = f"{component_name}_{attribute.name}"
 
     graph.node(
         name=attribute_id,
-        label=make_label(attribute.name, underlined=attribute.isPrimaryKey),
+        label=make_label(
+            attribute.name,
+            underlined=attribute.isPrimaryKey,
+            dashed_underline=attribute.isPartialKey,
+        ),
         shape="oval",
-        peripheries="2" if attribute.isMultiValued else "1"
+        peripheries="2" if attribute.isMultiValued else "1",
+        style="dashed" if attribute.derived else "solid",
     )
+
+    graph.edge(component_name, attribute_id, len="0.5")
 
     # Composite Attribute
     if attribute.composite:
-        composite_attribute_drawing(attribute, graph, entity)
+        for subatt in attribute.composite:
+            if isinstance(subatt, str):
+                subatt = Attribute(name=subatt)
+            attribute_drawing(subatt, graph, attribute_id)
 
-    graph.edge(entity.name, attribute_id)
 
 def entity_drawing(entity, graph):
     graph.node(
         name=entity.name,
         label=entity.name,
         shape="rectangle",
-        peripheries = "2" if entity.weak else "1"
+        peripheries="2" if entity.weak else "1",
     )
 
     for attribute in entity.attributes:
-        attribute_drawing(attribute, graph, entity)
+        attribute_drawing(attribute, graph, entity.name)
+
 
 def relationship_drawing(relationship, graph):
     entities = relationship.entities
     cardinalities = relationship.cardinalities
     participations = relationship.participations
+    attributes = relationship.attributes
 
     if len(participations) == 0:
         participations = ["partial"] * len(entities)
-    
+
     graph.node(
         name=relationship.name,
         label=relationship.name,
         shape="diamond",
-        peripheries = "2" if relationship.identifying else "1"
+        peripheries="2" if relationship.identifying else "1",
     )
-    
-    for entity, cardinality, participation in zip(entities, cardinalities, participations):
+
+    for entity, cardinality, participation in zip(
+        entities, cardinalities, participations
+    ):
         graph.edge(
             entity,
             relationship.name,
-            headlabel=cardinality,
-            style = "bold" if (participation == "total") else "solid"
+            taillabel=cardinality,
+            labeldistance="2",
+            len="1.5",
+            color=(
+                "black:invis:black" if (participation.lower() == "total") else "black"
+            ),
         )
+
+    for attribute in attributes:
+        attribute_drawing(attribute, graph, relationship.name)
+
 
 def db_drawing(database, filename="er-diagram"):
 
-    graph = Graph(format="png")
-    graph.attr(splines="true")
+    graph = Graph(format="png", engine="neato")
+    graph.attr(overlap="false", sep="+12", splines="true")
+
+    if database.name:
+        graph.attr(
+            label=database.name,
+            labelloc="t",
+            labeljust="c",
+            fontsize="28",
+        )
+
+    graph.attr("graph", fontname="Helvetica", dpi="300")
+    graph.attr("node", fontname="Helvetica", fontsize="12")
+    graph.attr("edge", fontname="Helvetica", fontsize="11", penwidth="1.2")
 
     for entity in database.entities:
         entity_drawing(entity, graph)
@@ -79,112 +113,3 @@ def db_drawing(database, filename="er-diagram"):
         relationship_drawing(relationship, graph)
 
     graph.render(filename=filename, cleanup=True, view=True)
-
-# Testing
-example = """
-{
-  "name": "University",
-  "entities": [
-    {
-      "name": "Student",
-      "attributes": [
-        {
-          "name": "id",
-          "isPrimaryKey": true,
-          "composite": null,
-          "isMultiValued": false,
-          "derived": false
-        },
-        {
-          "name": "name",
-          "isPrimaryKey": false,
-          "composite": null,
-          "isMultiValued": false,
-          "derived": false
-        },
-        {
-          "name": "email",
-          "isPrimaryKey": false,
-          "composite": null,
-          "isMultiValued": false,
-          "derived": false
-        }
-      ],
-      "weak": false
-    },
-    {
-      "name": "Course",
-      "attributes": [
-        {
-          "name": "code",
-          "isPrimaryKey": true,
-          "composite": null,
-          "isMultiValued": false,
-          "derived": false
-        },
-        {
-          "name": "title",
-          "isPrimaryKey": false,
-          "composite": null,
-          "isMultiValued": false,
-          "derived": false
-        },
-        {
-          "name": "credit_hours",
-          "isPrimaryKey": false,
-          "composite": null,
-          "isMultiValued": false,
-          "derived": false
-        }
-      ],
-      "weak": false
-    },
-    {
-      "name": "Enrollment",
-      "attributes": [
-        {
-          "name": "grade",
-          "isPrimaryKey": false,
-          "composite": null,
-          "isMultiValued": false,
-          "derived": false
-        }
-      ],
-      "weak": true
-    }
-  ],
-  "relationships": [
-    {
-      "name": "Student_Enrollment",
-      "entities": [],
-      "cardinalities": [
-        "1",
-        "N"
-      ],
-      "participations": [
-        "Partial",
-        "Total"
-      ],
-      "identifying": true
-    },
-    {
-      "name": "Course_Enrollment",
-      "entities": [],
-      "cardinalities": [
-        "1",
-        "N"
-      ],
-      "participations": [
-        "Partial",
-        "Total"
-      ],
-      "identifying": true
-    }
-  ]
-}
-"""
-
-
-db = Database.model_validate_json(example)
-
-db_drawing(db)
