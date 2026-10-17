@@ -1,106 +1,50 @@
 {
-  "name": "CompanyDB",
-  "entities": [
-    {
-      "name": "Employee",
-      "attributes": [],
-      "weak": false
-    },
-    {
-      "name": "Department",
-      "attributes": [],
-      "weak": false
-    },
-    {
-      "name": "Project",
-      "attributes": [],
-      "weak": false
-    },
-    {
-      "name": "Dependent",
-      "attributes": [],
-      "weak": true
-    }
-  ],
-  "relationships": [
-    {
-      "name": "WorksFor",
-      "entities": [
-        "Employee",
-        "Department"
-      ],
-      "cardinalities": [
-        "N",
-        "1"
-      ],
-      "participations": [
-        "total",
-        "total"
-      ],
-      "attributes": [],
-      "identifying": false
-    },
-    {
-      "name": "WorksOn",
-      "entities": [
-        "Employee",
-        "Project"
-      ],
-      "cardinalities": [
-        "M",
-        "N"
-      ],
-      "participations": [
-        "total",
-        "partial"
-      ],
-      "attributes": [
-        {
-          "name": "hours",
-          "isPrimaryKey": false,
-          "composite": null,
-          "isMultiValued": false,
-          "derived": false
-        }
-      ],
-      "identifying": false
-    },
-    {
-      "name": "HasDependent",
-      "entities": [
-        "Dependent",
-        "Employee"
-      ],
-      "cardinalities": [
-        "N",
-        "1"
-      ],
-      "participations": [
-        "total",
-        "partial"
-      ],
-      "attributes": [],
-      "identifying": true
-    },
-    {
-      "name": "Supply",
-      "entities": [
-        "Employee",
-        "Department",
-        "Project"
-      ],
-      "cardinalities": [
-        "1",
-        "M",
-        "N"
-      ],
-      "participations": [
-        "partial",
-        "partial",
-        "partial"
-      ],
-      "attributes": [],
-      "identifying": false
-    }
-  ]
+ "name": "Company",
+ "entities": [
+   {
+     "name": "Employee",
+     "weak": false,
+     "attributes": [
+       {"name": "ssn", "isPrimaryKey": true},
+       {"name": "name", "composite": [{"name": "first"}, {"name": "last"}]},
+       {"name": "phones", "isMultiValued": true},
+       {"name": "age", "derived": true},
+       {"name": "tags", "composite": ["a", "b"]},
+       {"name": "address", "composite": [
+         {"name": "street"},
+         {"name": "city", "composite": [{"name": "zip"}]}
+       ]}
+     ]
+   },
+   {"name": "Project", "attributes": [{"name": "pno", "isPrimaryKey": true}, {"name": "title"}]},
+   {"name": "Department", "attributes": [{"name": "dno", "isPrimaryKey": true}]},
+   {"name": "Dependent", "weak": true, "attributes": [{"name": "dep_name", "isPrimaryKey": true}]}
+ ],
+ "relationships": [
+   {
+     "name": "Works_On",
+     "entity1": "Employee", "entity2": "Project",
+     "cardinality": "M:N",
+     "participation": "total:partial",
+     "attributes": [{"name": "hours"}]
+   },
+   {
+     "name": "Has_Dependent",
+     "entity1": "Employee", "entity2": "Dependent",
+     "cardinality": "1:N",
+     "participation": "partial:total",
+     "identifying": true
+   },
+   {
+     "name": "Supplies",
+     "entity1": "Employee", "entity2": "Project", "entity3": "Department",
+     "cardinality": "1:M:N"
+   },
+   {
+     "name": "Works_For",
+     "entities": ["Employee", "Department"],
+     "cardinalities": ["N", "1"],
+     "participations": ["total", "total"]
+   }
+ ]
 }
