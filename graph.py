@@ -89,9 +89,9 @@ def relationship_drawing(relationship, graph):
         attribute_drawing(attribute, graph, relationship.name)
 
 
-def db_drawing(database, filename="er-diagram"):
+def db_drawing(database, filename="er-diagram", format="png", view=True):
 
-    graph = Graph(format="png", engine="neato")
+    graph = Graph(format=format, engine="neato")
     graph.attr(overlap="false", sep="+12", splines="true")
 
     if database.name:
@@ -102,7 +102,7 @@ def db_drawing(database, filename="er-diagram"):
             fontsize="28",
         )
 
-    graph.attr("graph", fontname="Helvetica", dpi="300")
+    graph.attr("graph", fontname="Helvetica", dpi="450")
     graph.attr("node", fontname="Helvetica", fontsize="12")
     graph.attr("edge", fontname="Helvetica", fontsize="11", penwidth="1.2")
 
@@ -112,4 +112,4 @@ def db_drawing(database, filename="er-diagram"):
     for relationship in database.relationships:
         relationship_drawing(relationship, graph)
 
-    graph.render(filename=filename, cleanup=True, view=True)
+    return graph.render(filename=filename, cleanup=True, view=view)

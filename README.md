@@ -57,6 +57,43 @@ Do not commit `.env` or expose API keys. The file is ignored by Git.
 
 ## Running the Application
 
+### GUI Mode (Recommended)
+
+Launch the modern desktop GUI:
+
+```bash
+python gui.py
+```
+
+#### GUI Features
+
+- **Split-Panel Layout**: Natural language AI prompt and code-style JSON editor on the left, interactive diagram preview on the right.
+- **Three Input Paths**: Generate schemas from descriptions via Gemini AI, write/edit JSON directly in the editor, or import existing `.json` files via file picker or drag & drop.
+- **Live Debounced Validation (~400ms)**: Real-time syntax and schema verification with exact line/column indicators and offending line highlighting.
+- **Review Before Render**: AI-generated models are placed directly into the editor for review and manual refinement before drawing.
+- **Diagram Preview & Navigation**: Smooth zoom controls (+ / − / Fit), mouse wheel zoom (`Ctrl + Wheel`), and drag-to-pan navigation.
+- **Multi-Format Export**: Save your diagram as PNG, SVG vector, or PDF directly to any location.
+- **Modern Themes**: Clean Dark mode (default) and Light mode with persistent state.
+- **Ready-Made Examples**: Quick-load Company (Lab 1), University System, and Hospital Management examples from the top menu.
+- **Settings Dialog**: Easily configure your Gemini API key (persisted to `.env` only) and select the Gemini model.
+
+#### Keyboard Shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl + Enter` | Generate ER Diagram |
+| `Ctrl + G` | Generate JSON with AI |
+| `Ctrl + S` | Save Diagram (PNG, SVG, PDF) |
+| `Ctrl + O` | Open JSON file |
+| `Ctrl + Shift + F` | Format / Pretty-print JSON |
+| `Ctrl + Wheel` | Zoom in / Zoom out diagram |
+
+#### Screenshot
+
+![ER Diagram Generator application screenshot](image.png)
+
+### CLI Mode
+
 ```bash
 python main.py
 ```
@@ -137,9 +174,11 @@ The test script validates the Pydantic schema and renders a sample ER diagram.
 
 ## Project Structure
 
-| File | Purpose |
+| File / Directory | Purpose |
 | --- | --- |
-| `main.py` | Interactive application workflow |
+| `gui.py` | Desktop GUI entry point |
+| `ui/` | GUI components (editor, preview, validator, workers, themes) |
+| `main.py` | Interactive CLI application workflow |
 | `models.py` | Pydantic database, entity, attribute, and relationship models |
 | `ai.py` | Gemini integration for generating and refining models |
 | `graph.py` | Graphviz ER diagram rendering |
@@ -148,6 +187,8 @@ The test script validates the Pydantic schema and renders a sample ER diagram.
 | `database.json` | Example/editable database model |
 | `er-diagram.png` | Rendered diagram output |
 | `testing.py` | Schema and rendering checks |
+| `test_gui.py` | Headless GUI test suite |
+| `requirements.txt`| Application dependencies |
 
 ## Security Notes
 

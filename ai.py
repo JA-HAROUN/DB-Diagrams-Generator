@@ -60,15 +60,29 @@ Modeling rules (decide these yourself from the description):
   interpretation instead of leaving fields empty.
 """
 
+import os
+
 llm = ChatGoogleGenerativeAI(model=MODEL, temperature=0)
 structured_llm = llm.with_structured_output(Database)
 
 
-def generate_database(description: str) -> Database | None:
-    return structured_llm.invoke(f"{description}\n{INSTRUCTIONS}")
+def get_structured_llm(model: str | None = None):
+    load_dotenv(override=True)
+    m = model or os.getenv("GEMINI_MODEL", MODEL)
+    api_key = os.getenv("GEMINI_API_KEY")
+    if api_key:
+        active_llm = ChatGoogleGenerativeAI(model=m, temperature=0, google_api_key=api_key)
+    else:
+        active_llm = ChatGoogleGenerativeAI(model=m, temperature=0)
+    return active_llm.with_structured_output(Database)
 
 
-def refine_database(current: Database, feedback: str) -> Database | None:
+def generate_database(description: str, model: str | None = None) -> Database | None:
+    client = get_structured_llm(model)
+    return client.invoke(f"{description}\n{INSTRUCTIONS}")
+
+
+def refine_database(current: Database, feedback: str, model: str | None = None) -> Database | None:
     prompt = f"""
     Here is the current ER database as JSON:
 
@@ -79,4 +93,5 @@ def refine_database(current: Database, feedback: str) -> Database | None:
     {INSTRUCTIONS}
     """
 
-    return structured_llm.invoke(prompt)
+    client = get_structured_llm(model)
+    return client.invoke(prompt)
